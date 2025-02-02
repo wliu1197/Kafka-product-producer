@@ -53,7 +53,28 @@ public class ProductServiceImpl implements ProductService {
             above future.whenComplete will still run after it receive result from broker
             and application will continue without waiting for it. */
        // future.join();
-
         return productId;
     }
+
+
+ /*
+    // you can use above future.join() to make it synchronous or use below call
+    @Override
+    public String createProduct(CreateProductRequest product){
+        String productId = UUID.randomUUID().toString();
+        //todo: Persist product details into database table before publishing an Event
+        ProductCreatedEvent productCreateEvent = new ProductCreatedEvent(productId,
+                product.getTitle(),
+                product.getPrice(),
+                product.getQuantity());
+        try {
+            SendResult<String, ProductCreatedEvent> result =
+                    kafkaTemplate.send(Constants.PRODUCT_CREATED_EVENTS_TOPIC, productId, productCreateEvent).get();
+            logger.info("Successfully sent product message: " + result.getRecordMetadata());
+        }catch (Exception e){
+            logger.error("Failed to send product message: " + e.getMessage());
+        }
+        return productId;
+    }
+ */
 }
