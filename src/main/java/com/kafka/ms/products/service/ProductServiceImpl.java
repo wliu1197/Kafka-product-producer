@@ -71,6 +71,9 @@ public class ProductServiceImpl implements ProductService {
             SendResult<String, ProductCreatedEvent> result =
                     kafkaTemplate.send(Constants.PRODUCT_CREATED_EVENTS_TOPIC, productId, productCreateEvent).get();
             logger.info("Successfully sent product message: " + result.getRecordMetadata());
+            logger.info("Partition: " + result.getRecordMetadata().partition());
+            logger.info("Topic: " + result.getRecordMetadata().topic());
+            logger.info("Offset: " + result.getRecordMetadata().offset());
         }catch (Exception e){
             logger.error("Failed to send product message: " + e.getMessage());
         }
