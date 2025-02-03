@@ -21,24 +21,29 @@ public class KafkaConfig {
     // This part of code using java to configure producer acks and creates KafkaTemplate spring bean from ProducerFactory
     // for ProductCreatedEvent then we can inject this KafkaTemplate to the business logic
 
-    @Value("kafka.producer.bootstrap-servers")
+    @Value("${kafka.producer.bootstrap-servers}")
     private String bootstrapServers;
-    @Value("kafka.producer.key-serializer")
+    @Value("${kafka.producer.key-serializer}")
     private String keySerializer;
-    @Value("kafka.producer.value-serializer")
+    @Value("${kafka.producer.value-serializer}")
     private String valueSerializer;
-    @Value("spring.kafka.producer.acks")
+    @Value("${spring.kafka.producer.acks}")
     private String acks;
-    @Value("spring.kafka.producer.retries")
+    @Value("${spring.kafka.producer.retries}")
     private String retries;
-    @Value("kafka.producer.properties.retry.backoff.ms")
+    @Value("${kafka.producer.properties.retry.backoff.ms}")
     private String retryBackOff;
-    @Value("kafka.producer.properties.delivery.timeout.ms")
+    @Value("${kafka.producer.properties.delivery.timeout.ms}")
     private String deliveryTimeout;
-    @Value("kafka.producer.properties.linger.ms")
+    @Value("${kafka.producer.properties.linger.ms}")
     private String linger;
-    @Value("kafka.producer.properties.request.timeout.ms")
+    @Value("${kafka.producer.properties.request.timeout.ms}")
     private String requestTimeout;
+
+    @Value("${kafka.producer.properties.enable.idempotence}")
+    private boolean idempotence;
+    @Value("${kafka.producer.properties.max.in.flight.request.per.connection}")
+    private Integer inflightRequest;
 
     Map<String,Object> producerConfigs() {
         Map<String,Object> config = new HashMap<>();
@@ -51,6 +56,8 @@ public class KafkaConfig {
         config.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG,deliveryTimeout);
         config.put(ProducerConfig.LINGER_MS_CONFIG,linger);
         config.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG,requestTimeout);
+        config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG,idempotence);
+        config.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION,inflightRequest);
         return config;
     }
 
@@ -63,7 +70,6 @@ public class KafkaConfig {
         return new KafkaTemplate<String, ProductCreatedEvent>(producerFactory());
     }
 */
-
     @Bean
     NewTopic createTopic(){
         // we can have 3 broker servers running so we can replicate messages to provide high availability
