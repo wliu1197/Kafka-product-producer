@@ -1,6 +1,5 @@
 package com.kafka.ms.products.service;
 
-import com.kafka.ms.events.ProductCreatedTestEvent;
 import com.kafka.ms.products.model.CreateProductRequest;
 import com.kafka.ms.products.model.constants.Constants;
 import com.kafka.ms.events.ProductCreatedEvent;
@@ -20,18 +19,11 @@ public class ProductServiceImpl implements ProductService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     //key-value pair message <String,ProductCreateEvent>
     KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate;
-    KafkaTemplate<String, ProductCreatedTestEvent> kafkaTemplateTest;
 
-    public ProductServiceImpl(KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate, KafkaTemplate<String, ProductCreatedTestEvent> kafkaTemplateTest) {
-        this.kafkaTemplate = kafkaTemplate;
-        this.kafkaTemplateTest = kafkaTemplateTest;
-    }
-
-  /*
     public ProductServiceImpl(KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
-*/
+
     @Override
     public String createProduct(CreateProductRequest product){
         String productId = UUID.randomUUID().toString();
@@ -56,19 +48,6 @@ public class ProductServiceImpl implements ProductService {
                 logger.info("Successfully sent product message: " + result.getRecordMetadata());
            }
         });
-        // try to send different event type to same topic
-        ProductCreatedTestEvent productCreatedTestEvent = new ProductCreatedTestEvent("asdfasdfasdfsaf","test product");
-        CompletableFuture<SendResult<String, ProductCreatedTestEvent>> futureTest =
-                kafkaTemplateTest.send(Constants.PRODUCT_CREATED_EVENTS_TOPIC, "asdfasdfasdfsaf", productCreatedTestEvent);
-
-        futureTest.whenComplete((result,exception) -> {
-            if(exception != null){
-                logger.error("Failed to send test product message: " + exception.getMessage());
-            } else {
-                logger.info("Successfully sent test product message: " + result.getRecordMetadata());
-            }
-        });
-
 
         /* future.join() makes it synchronous communication style it will wait until future object complete processing it's logic
             if you don't want to wait result just simple remove this future.join()
@@ -77,7 +56,6 @@ public class ProductServiceImpl implements ProductService {
        // future.join();
         return productId;
     }
-
 
  /*
     // you can use above future.join() to make it synchronous or use below call
