@@ -1,8 +1,9 @@
 package com.kafka.ms.products.service;
 
+import com.kafka.ms.events.ProductCreatedTestEvent;
 import com.kafka.ms.products.model.CreateProductRequest;
 import com.kafka.ms.products.model.constants.Constants;
-import com.kafka.ms.products.model.event.ProductCreatedEvent;
+import com.kafka.ms.events.ProductCreatedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,11 +20,18 @@ public class ProductServiceImpl implements ProductService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     //key-value pair message <String,ProductCreateEvent>
     KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate;
+    KafkaTemplate<String, ProductCreatedTestEvent> kafkaTemplateTest;
 
+    public ProductServiceImpl(KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate, KafkaTemplate<String, ProductCreatedTestEvent> kafkaTemplateTest) {
+        this.kafkaTemplate = kafkaTemplate;
+        this.kafkaTemplateTest = kafkaTemplateTest;
+    }
+
+  /*
     public ProductServiceImpl(KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
-
+*/
     @Override
     public String createProduct(CreateProductRequest product){
         String productId = UUID.randomUUID().toString();
@@ -48,6 +56,20 @@ public class ProductServiceImpl implements ProductService {
                 logger.info("Successfully sent product message: " + result.getRecordMetadata());
            }
         });
+        // try to send different event type to same topic
+        ProductCreatedTestEvent productCreatedTestEvent = new ProductCreatedTestEvent("asdfasdfasdfsaf","test product");
+        CompletableFuture<SendResult<String, ProductCreatedTestEvent>> futureTest =
+                kafkaTemplateTest.send(Constants.PRODUCT_CREATED_EVENTS_TOPIC, "asdfasdfasdfsaf", productCreatedTestEvent);
+
+        futureTest.whenComplete((result,exception) -> {
+            if(exception != null){
+                logger.error("Failed to send test product message: " + exception.getMessage());
+            } else {
+                logger.info("Successfully sent test product message: " + result.getRecordMetadata());
+            }
+        });
+
+
         /* future.join() makes it synchronous communication style it will wait until future object complete processing it's logic
             if you don't want to wait result just simple remove this future.join()
             above future.whenComplete will still run after it receive result from broker

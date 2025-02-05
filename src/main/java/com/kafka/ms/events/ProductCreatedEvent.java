@@ -1,4 +1,4 @@
-package com.kafka.ms.products.model.event;
+package com.kafka.ms.events;
 
 public class ProductCreatedEvent {
     private String productId;
