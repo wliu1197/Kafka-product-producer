@@ -3,6 +3,7 @@ package com.kafka.ms.products.service;
 import com.kafka.ms.products.model.CreateProductRequest;
 import com.kafka.ms.products.model.constants.Constants;
 import com.kafka.ms.events.ProductCreatedEvent;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -38,8 +39,19 @@ public class ProductServiceImpl implements ProductService {
         */
 
         //java asynchronous callback function when asynchronous operation completed it will trigger the logic
+       /*
         CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
                 kafkaTemplate.send(Constants.PRODUCT_CREATED_EVENTS_TOPIC, productId, productCreateEvent);
+        */
+
+        //produce message with header in it
+        //first create ProducerRecord then add headers
+        ProducerRecord<String,ProductCreatedEvent> record =
+                new ProducerRecord<>(Constants.PRODUCT_CREATED_EVENTS_TOPIC, productId, productCreateEvent);
+        record.headers().add("messageId",productId.getBytes());
+        //send message with header asynchronous communication style
+        CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
+                kafkaTemplate.send(record);
 
         future.whenComplete((result,exception) -> {
            if(exception != null){

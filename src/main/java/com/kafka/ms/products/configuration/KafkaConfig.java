@@ -2,6 +2,8 @@ package com.kafka.ms.products.configuration;
 
 import com.kafka.ms.products.model.constants.Constants;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
@@ -10,6 +12,7 @@ import java.util.Map;
 
 @Configuration
 public class KafkaConfig {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 /*
     // This part of code using java to configure producer acks and creates KafkaTemplate spring bean from ProducerFactory
     // for ProductCreatedEvent then we can inject this KafkaTemplate to the business logic
@@ -69,10 +72,12 @@ public class KafkaConfig {
         // as have 3 broker servers so replicas set to 3
         // 3 partitions in each broker
         // minimum 2 replicas that acknowledge successful stored of message it will return success to producer otherwise it returns exception
-        return TopicBuilder.name(Constants.PRODUCT_CREATED_EVENTS_TOPIC)
+        NewTopic topic =  TopicBuilder.name(Constants.PRODUCT_CREATED_EVENTS_TOPIC)
                 .partitions(3)
                 .replicas(3)
                 .configs(Map.of("min.insync.replicas","2"))
                 .build();
+        logger.info("-----------------" + Constants.PRODUCT_CREATED_EVENTS_TOPIC + " created ---------------");
+        return topic;
     }
 }
