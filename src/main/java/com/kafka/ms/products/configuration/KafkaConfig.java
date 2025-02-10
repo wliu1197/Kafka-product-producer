@@ -1,31 +1,37 @@
 package com.kafka.ms.products.configuration;
 
+import com.kafka.ms.events.ProductCreatedEvent;
 import com.kafka.ms.products.model.constants.Constants;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.transaction.KafkaTransactionManager;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
 public class KafkaConfig {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-/*
     // This part of code using java to configure producer acks and creates KafkaTemplate spring bean from ProducerFactory
     // for ProductCreatedEvent then we can inject this KafkaTemplate to the business logic
-
     @Value("${kafka.producer.bootstrap-servers}")
     private String bootstrapServers;
     @Value("${kafka.producer.key-serializer}")
     private String keySerializer;
     @Value("${kafka.producer.value-serializer}")
     private String valueSerializer;
-    @Value("${spring.kafka.producer.acks}")
+    @Value("${kafka.producer.acks}")
     private String acks;
-    @Value("${spring.kafka.producer.retries}")
+    @Value("${kafka.producer.retries}")
     private String retries;
     @Value("${kafka.producer.properties.retry.backoff.ms}")
     private String retryBackOff;
@@ -41,6 +47,10 @@ public class KafkaConfig {
     @Value("${kafka.producer.properties.max.in.flight.request.per.connection}")
     private Integer inflightRequest;
 
+    @Value("kafka.producer.transaction-id-prefix")
+    private String transactionalIdPrefix;
+
+
     Map<String,Object> producerConfigs() {
         Map<String,Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,bootstrapServers);
@@ -54,6 +64,8 @@ public class KafkaConfig {
         config.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG,requestTimeout);
         config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG,idempotence);
         config.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION,inflightRequest);
+        //add transaction to Kafka
+        config.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG,transactionalIdPrefix);
         return config;
     }
 
@@ -62,10 +74,17 @@ public class KafkaConfig {
         return new DefaultKafkaProducerFactory<>(producerConfigs());
     }
     @Bean
-    KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate(){
-        return new KafkaTemplate<String, ProductCreatedEvent>(producerFactory());
+    KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate(ProducerFactory<String, ProductCreatedEvent> producerFactory){
+        return new KafkaTemplate<String, ProductCreatedEvent>(producerFactory);
     }
-*/
+    //KafkaTransactionManager uses same producerFactory to apply transactions
+    @Bean
+    KafkaTransactionManager<String,ProductCreatedEvent> kafkaTransactionManager(
+            ProducerFactory<String, ProductCreatedEvent> producerFactory) {
+        return new KafkaTransactionManager<>(producerFactory);
+    }
+
+
     @Bean
     NewTopic createTopic(){
         // we can have 3 broker servers running so we can replicate messages to provide high availability

@@ -8,7 +8,12 @@ import org.springframework.stereotype.Service;
 @Qualifier("ProductServiceProxy")
 public class ProductServiceProxyImpl implements ProductService {
     @Override
+    public String createProductTransaction(CreateProductRequest product){
+        return null;
+    }
+    @Override
     public String createProduct(CreateProductRequest product){
         return "success";
     }
+
 }
