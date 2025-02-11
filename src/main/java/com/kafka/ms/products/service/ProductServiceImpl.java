@@ -3,6 +3,8 @@ package com.kafka.ms.products.service;
 import com.kafka.ms.products.model.CreateProductRequest;
 import com.kafka.ms.products.model.constants.Constants;
 import com.kafka.ms.events.ProductCreatedEvent;
+import com.kafka.ms.products.model.db.CreatedProductEventDetails;
+import com.kafka.ms.products.repository.CreatedProductEventRepository;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +21,16 @@ import java.util.concurrent.CompletableFuture;
 @Qualifier("ProductServiceImpl")
 public class ProductServiceImpl implements ProductService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private static boolean failTheTransaction = true;
+    private static boolean failTheTransaction = false;
     //key-value pair message <String,ProductCreateEvent>
     KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate;
 
-    public ProductServiceImpl(KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate) {
+    CreatedProductEventRepository createdProductEventRepository;
+
+    public ProductServiceImpl(KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate,
+                              CreatedProductEventRepository createdProductEventRepository) {
         this.kafkaTemplate = kafkaTemplate;
+        this.createdProductEventRepository = createdProductEventRepository;
     }
     //add @transactional then SpringBoot will use Kafka transaction manager we created in config class to manage Kafka transaction
     //this function will run within single transaction
@@ -58,6 +64,45 @@ public class ProductServiceImpl implements ProductService {
                 logger.info("Successfully sent product message: " + result.getRecordMetadata());
             }
         });
+        return productId;
+    }
+
+    //this @Transactional(value="transactionManager") will contains
+    // both JpaTransactionManage and KafkaTransactionManager
+    @Transactional(value="transactionManager", rollbackFor = {Throwable.class})
+    @Override
+    public String createProductWithDBAndKafkaTransaction(CreateProductRequest product){
+        String productId = UUID.randomUUID().toString();
+        //todo: Persist product details into database table before publishing an Event
+        ProductCreatedEvent productCreateEvent = new ProductCreatedEvent(productId,
+                product.getTitle(),
+                product.getPrice(),
+                product.getQuantity());
+
+        ProducerRecord<String,ProductCreatedEvent> record =
+                new ProducerRecord<>(Constants.PRODUCT_CREATED_EVENTS_TOPIC, productId, productCreateEvent);
+        record.headers().add("messageId",productId.getBytes());
+        //send message with header asynchronous communication style
+        CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
+                kafkaTemplate.send(record);
+        future.whenComplete((result,exception) -> {
+            if(exception != null){
+                logger.error("Failed to send product message: " + exception.getMessage());
+            } else {
+                logger.info("Successfully sent product message: " + result.getRecordMetadata());
+            }
+        });
+
+        //save to DB before produce event to broker
+        CreatedProductEventDetails createdProductEventDetails = new CreatedProductEventDetails(productId,
+                productCreateEvent.toString());
+        createdProductEventRepository.save(createdProductEventDetails);
+
+        //manually fail the transaction to test rollback
+        if(failTheTransaction) {
+            throw new RuntimeException("Throw error manually transaction rollback");
+        }
+
         return productId;
     }
 

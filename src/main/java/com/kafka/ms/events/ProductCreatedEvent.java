@@ -7,8 +7,7 @@ public class ProductCreatedEvent {
     private Integer quantity;
 
     //This no args constructor use for serializer and deserializer via data transfer in/out from broker
-    public ProductCreatedEvent() {
-    }
+    public ProductCreatedEvent() {}
 
     public ProductCreatedEvent(String productId, String title, Double price, Integer quantity) {
         this.productId = productId;

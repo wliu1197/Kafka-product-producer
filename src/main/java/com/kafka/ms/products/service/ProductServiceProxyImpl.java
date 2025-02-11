@@ -12,6 +12,10 @@ public class ProductServiceProxyImpl implements ProductService {
         return null;
     }
     @Override
+    public String createProductWithDBAndKafkaTransaction(CreateProductRequest product){
+        return null;
+    }
+    @Override
     public String createProduct(CreateProductRequest product){
         return "success";
     }

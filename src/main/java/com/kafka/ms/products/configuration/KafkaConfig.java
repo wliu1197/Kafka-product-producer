@@ -2,6 +2,7 @@ package com.kafka.ms.products.configuration;
 
 import com.kafka.ms.events.ProductCreatedEvent;
 import com.kafka.ms.products.model.constants.Constants;
+import jakarta.persistence.EntityManagerFactory;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
@@ -14,6 +15,8 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.transaction.KafkaTransactionManager;
+
+import org.springframework.orm.jpa.JpaTransactionManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -83,7 +86,12 @@ public class KafkaConfig {
             ProducerFactory<String, ProductCreatedEvent> producerFactory) {
         return new KafkaTransactionManager<>(producerFactory);
     }
-
+    //spring will by default search for @Bean("transactionManager") if we use this name it will include both
+    //KafkaTransactionManager and JpaTransactionManager
+    @Bean("transactionManager")
+    JpaTransactionManager jpaTransactionManager(EntityManagerFactory entityManagerFactory){
+        return new JpaTransactionManager(entityManagerFactory);
+    }
 
     @Bean
     NewTopic createTopic(){

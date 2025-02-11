@@ -21,7 +21,7 @@ public class ProductController {
 
     @PostMapping("/product")
     public ResponseEntity<String> addProduct(@RequestBody CreateProductRequest product) {
-        String productId = productService.createProductTransaction(product);
+        String productId = productService.createProductWithDBAndKafkaTransaction(product);
         return new ResponseEntity<String>(productId,HttpStatus.CREATED);
     }
 }

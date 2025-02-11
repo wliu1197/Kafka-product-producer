@@ -4,5 +4,8 @@ import com.kafka.ms.products.model.CreateProductRequest;
 
 public interface ProductService {
     String createProductTransaction(CreateProductRequest product);
+
+    String createProductWithDBAndKafkaTransaction(CreateProductRequest product);
+
     String createProduct(CreateProductRequest product);
 }
