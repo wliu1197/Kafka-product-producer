@@ -1,0 +1,28 @@
+# have a DB to store message before produce to kafka broker and apply JpaTransactionManager
+Step 1: Run docker-compose.yaml this will start up MySql in container
+$ docker-compose up
+Step 2: Access your DB by
+docker exec -it kafka-demo-database bash
+mysql -u root -p kafka-demo-database
+password:dummypassword
+show databases; # lists all databases
+use kafka-demo-database; # connect to the mysql schema
+show tables;
+
+
+#docker-compose to run kafka in containers
+environment.env file contains variable used in docker-compose.yaml file
+#run the docker-compose with env file
+docker-compose --evn-file environment.env up
+#environment.env variable HOSTNAME=host.docker.internal only works in docker container
+#for microservice runs in local uses localhost as default value is localhost ${HOSTNAME:-localhost}
+#so when we run local micro-service we don't need to provide env file
+docker-compose up
+
+#docker into container
+docker exec -it kafka-broker-server-1 bash
+$ cd /opt/bitnami/kafka
+
+
+Clean up <none><none> dangling images that uses a lot of memory
+docker rmi $(docker images -f "dangling=true" -q)

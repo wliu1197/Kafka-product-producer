@@ -95,6 +95,7 @@ public class KafkaConfig {
 
     @Bean
     NewTopic createTopic(){
+        logger.info("-----------------" + Constants.PRODUCT_CREATED_EVENTS_TOPIC + " try to create ---------------");
         // we can have 3 broker servers running so we can replicate messages to provide high availability
         // as have 3 broker servers so replicas set to 3
         // 3 partitions in each broker
